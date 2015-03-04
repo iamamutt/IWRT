@@ -23,9 +23,6 @@ end
 clc;
 input('Resize MATLAB window and make any adjustments now. Press Enter to continue', 's');
 
-% cd 'D:\Dropbox\ExperimentPrograms\InfantWordRecognitionTask\matlab'; debug=true; useSetupFile=false;
-% cd 'E:\WordRecognitionTask'; useSetupFile=true; debug=false; rootpath = fullfile(pwd)
-
 %% SETUP PARAMETERS -------------------------------------------------------
 
 % change directory to main function location
