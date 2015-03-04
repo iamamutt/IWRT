@@ -34,6 +34,6 @@ To show a quick run through of the task, set the debug argument to `true`.
 
 Example: `wrt(true, true`)
 
-Parameters of the task may be changed in the file `TASKCONFIG.m`
+Parameters of the task may be changed in the file `TASKSETUP.m`
 
 

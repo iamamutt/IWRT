@@ -3,7 +3,7 @@ function wrt(useSetupFile, debug)
 %
 % ARGS:
 %  setupFile : logical: [true], false
-%   - use the program defaults (false) or set options in the TASKCONFIG.m
+%   - use the program defaults (false) or set options in the TASKSETUP.m
 %     file (true)
 %
 %  debug : logical: true, [false]

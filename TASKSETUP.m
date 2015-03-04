@@ -9,7 +9,7 @@ setup.eyeTracker = true;
 % if using the eye tracker, use the Eye Tracker Browser application
 % to find the Tobii tracker id.
 %  values: string
-setup.tobiiID = 'TT120-205-85200523';
+setup.tobiiID = 'TT120-xxx-xxxxxxxx';
 
 % Use automatic or manual calibration (if using eyetracker)
 %  values: true, false
