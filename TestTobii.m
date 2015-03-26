@@ -11,15 +11,17 @@ trackerID = inputdlg('Enter Tobii Tracker ID:', 'TOBII ID', [1,50], {'TT120-xxx-
 
 screenNum = inputdlg('Which screen is Tobii?:', 'TOBII ID', [1,50], {'1'});
 
-savePath = inputdlg('Where do you want to save the test files?:', 'Save folder', [1,100], {'E:\TobiiMatlabTest'});
+savePath = inputdlg('Where do you want to save the test files?:', 'Save folder', [1,100], {'C:\TobiiMatlabTest'});
+[success, mess, messid] = mkdir(fullfile(savePath{1}));
 
 setup.eyeTracker = true;
 setup.tobiiID = trackerID{1};
 setup.screenNum = str2num(screenNum{1});
 setup.screenRect = Screen('Rect', setup.screenNum);
-setup.autoCalibrate = false; 
+setup.autoCalibrate = false;
 setup.calibFileStr = fullfile(savePath{1}, filesep, 'testtobii_calib.csv');
     
+
 calibStrct = SetupTobii(setup);
 
 % Show dots

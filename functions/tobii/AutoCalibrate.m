@@ -2,7 +2,10 @@ function [calibStruct, Calib] = AutoCalibrate(Calib,pointOrder,recalibrate,recal
 
 Calib.pointer = tryScreenOpen(Calib.window, Calib.bgcolor);
 
+%%
 rootpath = fileparts(mfilename('fullpath'));
+
+% load audio
 [wav, srate] = audioread(fullfile(rootpath, 'calib.wav'));
 
 if size(wav, 2) == 1
@@ -10,6 +13,25 @@ if size(wav, 2) == 1
 end
 
 audioPtr = PsychPortAudio('Open', [], 1, 1, srate, 2, [], [], [], 8);
+
+% load image
+[calibImg, ~, alpha] = imread(fullfile(rootpath, 'calib.png'));
+
+if isempty(alpha)
+    alpha = uint8(ones(size(calibImg, 1), size(calibImg, 2)) .* 255);
+end
+
+alphaScale = double(alpha) ./ 255;
+
+% background color
+for j = 1:3
+    imlayer = double(calibImg(:,:,j));
+    imlayer = imlayer .* alphaScale;
+    bglayer = (1-alphaScale) .* Calib.bgcolor(j);
+    calibImg(:,:,j) = uint8(floor(imlayer + bglayer));
+end
+
+%%
 
 if (recalibrate==0)
     tetio_startCalib;
@@ -49,7 +71,7 @@ for i = 1:length(pointOrder);
         xNorm = xPixels / Calib.screen(3);
         yNorm = yPixels / Calib.screen(4);
         
-        fixationCircle(Calib.pointer, false, Calib.circlesize, xPixels, yPixels);
+        [pressedSpace, clickedScreen, x, y] = fixationImage(calibImg, Calib.pointer, false, Calib.stimsize, xPixels, yPixels);
         tetio_addCalibPoint(xNorm,yNorm);
         
         Calib.points.x(pointOrder(i)) = xNorm;

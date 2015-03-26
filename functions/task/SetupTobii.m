@@ -28,7 +28,7 @@ if setup.eyeTracker
     Calib.window = setup.screenNum;           % PTB window pointer
     Calib.automatic = setup.autoCalibrate;    % use automatic points (true) or use mouse (false)
     Calib.bgcolor = [0 0 0];                  % background color used in calibration process [0-255]
-    Calib.circlesize = 50;                    % max circle size
+    Calib.stimsize = 50;                      % max image size
     Calib.error = 100;                        % allowable error in number of pixels,  angle2pixels(2.5,60,26.9,1024)
     
     % Automatic calibration parameters
