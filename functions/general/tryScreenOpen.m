@@ -9,17 +9,19 @@ while PTBfail
     try
         winPtr = Screen('OpenWindow', winNum, bgColor);
         PTBfail = false;
-        failCounter = failCounter + 1;
     catch
+        PTBfail = true;
         Screen('CloseAll');
         clc
-        if failCounter == 5
+        failCounter = failCounter + 1;
+        disp(['failed ', num2str(failCounter), ' time(s)...']);
+        if failCounter == 6
             tryPTBagain = input('Opening next screen failed too many times! Try again? ([y]/n)\n','s');
             if isempty(tryPTBagain) || strcmpi(tryPTBagain(1),'y')
                 failCounter = 3;
                 continue;
             else
-                error('Quitting. Try to restart MATLAB');
+                error('Quitting. Try to restart MATLAB or PC');
             end
         else
             continue

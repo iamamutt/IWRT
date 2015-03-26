@@ -5,6 +5,9 @@ if nargin == 0
     fontsize = 16;
 end
 
+% skip sync tests
+Screen('Preference', 'SkipSyncTests', 1);
+
 % black screen
 Screen('Preference', 'VisualDebugLevel', 3);
 
