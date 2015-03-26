@@ -21,7 +21,7 @@ setup.screenRect = Screen('Rect', setup.screenNum);
 setup.autoCalibrate = false;
 setup.calibFileStr = fullfile(savePath{1}, filesep, 'testtobii_calib.csv');
     
-
+InitializePsychSound;
 calibStrct = SetupTobii(setup);
 
 % Show dots
