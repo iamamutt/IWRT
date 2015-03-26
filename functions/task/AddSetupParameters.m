@@ -101,6 +101,7 @@ if debug
     
 else
     [subId, subName, subAge, fileStr] = subjectBox('Infant_WRT');
+    setup.debug = false;
     
 end
 

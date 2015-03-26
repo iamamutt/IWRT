@@ -23,12 +23,8 @@ mask = blankMask(setup.screenRect, setup.maskColor);
 maskTexture = Screen('MakeTexture', windowPtr, mask);
 Screen('PreloadTextures', windowPtr, maskTexture);
 
-% attention getter buffers
-aTextures = [Screen('MakeTexture', windowPtr, images.attend.cookie.rgb), ...
-    Screen('MakeTexture', windowPtr, images.attend.elmo.rgb)];
-
-aBuffers = [PsychPortAudio('CreateBuffer', audioPtr, audio.attend.cookie.wav{1}'), ...
-    PsychPortAudio('CreateBuffer', audioPtr,audio.attend.elmo.wav{1}')];
+% load attention getter images and audio
+[aTextures, aBuffers] = LoadAttentionGetters(windowPtr, audioPtr, images, audio);
 
 % initialize eye tracking variables
 if setup.eyeTracker
