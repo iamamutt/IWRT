@@ -5,3 +5,4 @@ tobii_id.txt
 .Rbuildignore
 .Rhistory
 .RData
+.Rproj
