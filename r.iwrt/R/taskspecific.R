@@ -230,12 +230,13 @@ iwrt_roi <- function(dat, xname, yname)
 iwrt_roi_duration <- function(in_dat)
 {# in_dat <- dat[order(tet_musec)]
     
+    DT <- copy(in_dat)
     message("\nComputing ROI summary...") 
     roi <- getOption("roi.list")
     
     # tet_musec and ptb_musec_onset must exist
     looking_duration <- function(f,t1,t2,ts,pts) {
-        # x=in_dat[id==3 & trial == 28, ]
+        # x=DT[id==3 & trial == 28, ]
         # t1=x$imgStart; t2=x$audioStart; ts=x$tet_musec; pts=x$ptb_musec_onset; f=x$roi_left
         idx <- pts > min(t1) & pts <= max(t2)
         # timestamps=ts[idx]; fixations=f[idx]
@@ -243,11 +244,11 @@ iwrt_roi_duration <- function(in_dat)
     }
     
     out_list <- lapply(names(roi), function(x) {
-        in_dat[, roi_x := in_dat[[x]]]
-        in_dat[, `:=` (pre_audio_duration=(audioStart-imgStart)/1000, 
+        DT[, roi_x := DT[[x]]]
+        DT[, `:=` (pre_audio_duration=(audioStart-imgStart)/1000, 
                        post_audio_duration=(imgEnd-audioStart)/1000)]
         
-        before_aud <- in_dat[order(tet_musec), 
+        before_aud <- DT[order(tet_musec), 
                              looking_duration(roi_x,
                                               imgStart,
                                               audioStart,
@@ -257,7 +258,7 @@ iwrt_roi_duration <- function(in_dat)
                                      new, left, right, word,
                                      pre_audio_duration)]
         
-        after_aud <- in_dat[order(tet_musec), 
+        after_aud <- DT[order(tet_musec), 
                             looking_duration(roi_x,
                                              audioStart,
                                              imgEnd,
