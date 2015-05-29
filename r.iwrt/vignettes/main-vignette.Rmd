@@ -4,7 +4,7 @@ author: "Joseph M. Burling"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Package Usage}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -100,7 +100,7 @@ Here is the complete list of options:
         
 # Advanced usage
 
-If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console.
+If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console. More functions to come.
 
 ```{r, eval=FALSE}
 task_info <- import_task_data("path")

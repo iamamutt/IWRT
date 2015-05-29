@@ -1,6 +1,6 @@
 # R Package for Infant Word Recognition Task
 
-PURPOSE
+The `r.iwrt` package is used to handle the data exported from the MATLAB task IWRT, which is the main program in this GitHub repository.
 
 ## Installation
 
@@ -27,7 +27,11 @@ devtools::install_github("iamamutt/IWRT/r.iwrt")
 If you want to also install documentation on how to use this package, run this command instead of the one above. This will build the vignette corresponding to the package.
 
 ```r
+# build with vignette
 devtools::install_github("iamamutt/IWRT/r.iwrt", build_vignettes=TRUE)
+
+# view vignette
+browseVignettes("r.iwrt")
 ```
 
 ## Function Usage
@@ -35,7 +39,18 @@ devtools::install_github("iamamutt/IWRT/r.iwrt", build_vignettes=TRUE)
 Each time you use the package use must first load it and all its functions by placing the following at the top of each script.
 
 ```r
+# load the library
 library(r.iwrt)
 ```
 
-## R Options
+You can then run the automatic processing function by pointing it to the location of your data, then extracting the relevant data components you need for further analysis.
+
+```
+# use the auto function to return important datasets
+iwrt_list <- iwrt_auto("path/to/data")
+
+# extract ROI data only
+roi <- iwrt_list$roi
+```
+
+See more on usage here: [Vignette](https://github.com/iamamutt/IWRT/blob/master/r.iwrt/vignettes/main-vignette.Rmd)
