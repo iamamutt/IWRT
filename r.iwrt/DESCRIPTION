@@ -1,9 +1,15 @@
 Package: r.iwrt
+Version: 0.9.1
+Date: 2015-05-13
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
-Date: 2015-05-11
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Title: Analyzing MATLAB IWRT Data
+Description: A set of functions to import and process data from the IWRT
+Authors@R: c(person("Joseph M.", "Burling", email = "josephburling@gmail.com",
+  role = c("aut", "cre")))
+Imports: 
+    data.table
+Roxygen: list(wrap=FALSE)
+License: MIT
+URL: http://www.josephburling.com
+Suggests: knitr
+VignetteBuilder: knitr

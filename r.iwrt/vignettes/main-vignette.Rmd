@@ -1,0 +1,108 @@
+---
+title: "Using the IWRT Analysis Package in R"
+author: "Joseph M. Burling"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Package Info
+
+The `r.iwrt` package is used to handle the data exported from the MATLAB task IWRT, which is the main program in this GitHub repository. The IWRT task will export data in a root/main folder, typically called `data` and will look something like this:
+
+- `data`
+    - `SUB001`
+        - `Infant_WRT_001_Name_calibration.csv`
+        - `Infant_WRT_001_Name_data.csv`
+        - `Infant_WRT_001_Name_info.txt`
+        - `screenshots`
+            - `Infant_WRT_001_Name_scrCap_001.csv`
+            - `...`
+        - `tracking`
+            - `Infant_WRT_001_Name_eyeData_001.csv`
+            - `...`
+    - `SUB002`
+    - `...`
+    
+The package will search through the main folder `data` for further processing.
+
+# Usage
+
+After installing the package (see GitHub `README.md` documentation) once, you must load the library each time you use it. After the library has been sucessfully loaded you can use the `iwrt_auto` function to automatically import and process the data within the main `data` folder. For help on using this function, and all documented R functions, preceed the function name with a question mark like so, `?iwrt_auto`. This will bring you to the function's documentation page.
+
+The `iwrt_auto` function takes just one argument, the path to the main data folder. It will return an R list object contained several datasets. Take what you need, as you may not need datasets such as the complete set of data, but perhaps you may want to analyze ROI (Region of Interest) data. By default, regions of interest are the boundaries of the left and right images from the IWRT task. After running `iwrt_auto` you can extract the `data.table` from the list called `roi` to get the ROI data. See code below as an example:
+
+
+```{r, eval=FALSE}
+# load the library
+library(r.iwrt)
+
+# use the auto function to return important datasets
+iwrt_list <- iwrt_auto("path/to/data")
+
+# extract ROI data only
+roi <- iwrt_list$roi
+```
+    
+At the moment, the two types of data you can extract automatically are `complete`, which is all the data merged and without ROI summaries, and `roi`, which is the data of ROI summary info for each participant.
+
+# Package Options
+
+The main function `iwrt_auto` relies on default options that have been set when the package is loaded. You may overwrite the default values of these options using the function `options()` and return an option value using `getOption()`
+
+For example, to see and then overwrite how much to expand the ROI region, you can do the following:
+
+```{r, eval=FALSE}
+old_value <- getOption("roi.adj")
+options(roi.adj=1.1)
+```
+
+You can also provide a list of options to overwrite:
+
+```{r, eval=FALSE}
+# quickly set new options and get old values at the same time
+old_values <- options(list(tobii.filter.width=.67, tobii.filter.window=7))
+```
+
+Here is the complete list of options:
+
+- `tobii.interpolation.window`: If any gaps in tracking data, this determines how wide the gap is allowed to be when attempting to fill the gap. This works for short durations where the person may blink or no data collected.
+
+- `tobii.interpolation.method`: Whether to fill gaps linearlly or to use smoothing splines using (`spline(..., method="natural")`)
+
+- `tobii.filter.width`: Width of the Gaussian distribution of the smoothing filter. Default to 99% of the distribution, lower values means a flatter distribution, approaching the mean of a series of values.
+
+- `tobii.filter.window`: Window size of smoothing filter. Larger values returns smoother data but at a cost of introducing little variability. Defaults to a gaussian smoothing filter within a timespan of 92ms at 120hz.
+
+- `tobii.coord.xrange`: Range corresponding to a particular tobii horizontal coordinate system. Defaults to the Active Display Coordinate System which is in the range of 0 to 1.
+
+- `tobii.coord.yrange`: Range corresponding to a particular tobii vertical coordinate system. Defaults to the Active Display Coordinate System which is in the range of 0 to 1.
+
+- `tobii.col.left.validity`: Name of validity column for the left eye
+
+- `tobii.col.right.validity`: Name of validity column for the right eye
+
+- `tobii.col.left.xaxis`: Name of tracking data column for left eye horizontal axis
+
+- `tobii.col.right.xaxis`: Name of tracking data column for right eye horizontal axis
+
+- `tobii.col.left.yaxis`: Name of tracking data column for left eye vertical axis 
+
+- `tobii.col.right.yaxis`: Name of tracking data column for right eye vertical axis
+
+- `roi.list`: list of ROI column names. Each sublist must have 4 character strings referring to column names corresponding to the left ROI coordinate, top ROI coordinate, right ROI coordinate, bottom ROI coordinate. All coordinates must be in this order (left, top, right, bottom), and the data for these columns must be in the same range as the `tobii.coord.xrange` and `tobii.coord.yrange` options. Currently this is a list with 2 sublists, each sublist is the names of columns corresponding to the coordinates of the left image and right image taken from the task data. 
+
+- `roi.adj`: How much to increase or decrease the coordinates specified in the `roi.list` above. This is a multiplicative property. So if you set it to `1.1`, it will expand the box by 110%. 
+       
+        
+# Advanced usage
+
+If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console.
+
+```{r, eval=FALSE}
+task_info <- import_task_data("path")
+tracking_data <- import_tracking_data("path")
+```

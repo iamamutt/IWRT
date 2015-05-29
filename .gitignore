@@ -1,8 +1,10 @@
 data/**
 tobii_id.txt
 .DS_Store
+*.asv
 .Rproj.user
 .Rbuildignore
 .Rhistory
 .RData
 *.Rproj
+r.iwrt.Rcheck

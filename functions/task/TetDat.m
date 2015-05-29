@@ -1,5 +1,6 @@
 function [lefteye, righteye, gazetimestamp, tettimestamp, ptbstamp, gx, gy, n] = TetDat(ptbstart, tetstart)
 
+
 % tetStartstamp
 tetts = TobiiTimeStamp(tetstart, tetio_localToRemoteTime(tetio_localTimeNow()));
 
