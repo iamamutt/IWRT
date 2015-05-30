@@ -15,7 +15,9 @@ knitr::opts_chunk$set(eval=FALSE)
 
 # Package Info
 
-The `r.iwrt` package is used to handle the data exported from the MATLAB task IWRT, which is the main program in this GitHub repository. The IWRT task will export data in a root/main folder, typically called `data` and will look something like this:
+The `r.iwrt` package is used to handle the data exported from the MATLAB task IWRT, which is the master branch in this GitHub repository. 
+
+The IWRT task will export data in a root/main folder, typically called `data` and the tree structure will look something like this:
 
 - `data`
     - `SUB001`
@@ -35,13 +37,13 @@ The package will search through the main folder `data` for further processing.
 
 # Usage
 
-After installing the package (see GitHub `README.md` documentation) once, you must load the library each time you use it. After the library has been sucessfully loaded you can use the `iwrt_auto` function to automatically import and process the data within the main `data` folder. For help on using this function, and all documented R functions, preceed the function name with a question mark like so, `?iwrt_auto`. This will bring you to the function's documentation page.
+After installing the package once (see the GitHub `README.md` documentation), you must load the library each time you use it. You should check back regularly for package updates and re-install as necessary. After the library has been successfully loaded in R you can use the `iwrt_auto` function to automatically import and process the data from the main `data` folder. For help on using this function, and all documented R functions, precede the function name with a question mark like so, `?iwrt_auto`. This will bring you to the function's documentation page.
 
-The `iwrt_auto` function takes just one argument, the path to the main data folder. It will return an R list object containing several datasets. Take what you need, as you may not need datasets such as the complete set of data, but perhaps you may want to analyze ROI (Region of Interest) data. By default, regions of interest are the boundaries of the left and right images from the IWRT task data. After running `iwrt_auto` you can extract the `data.table` from the list called `roi` to get the ROI data. See code below as an example:
+The `iwrt_auto` function takes just one argument, the path to the main data folder. It will return an R `list` object containing several data sets. Take what you need, as you may not need data sets such as the complete set of data, but perhaps you may want to analyze ROI (Region of Interest) data. By default, regions of interest are the boundaries of the left and right images from the IWRT task data. After running `iwrt_auto` you can extract the relevant `data.table` from the list called `roi` to get the ROI data. See code below as an example:
 
 
 ```r
-# load the library
+# load the r.iwrt library
 library(r.iwrt)
 
 # make an object that holds the path to the main data folder
@@ -49,6 +51,7 @@ library(r.iwrt)
 data_path <- "../data"
 
 # use the auto function to return important datasets
+# this may take a while depending on the number of subject folders
 iwrt_list <- iwrt_auto(data_path)
 
 # extract complete, large dataset
@@ -61,7 +64,6 @@ roi <- iwrt_list$roi
 At the moment, the two types of data you can extract automatically are `complete`, which is all the data merged and without ROI summaries, and `roi`, which is the data of ROI summary info for each participant.
 
 
-
 # Package Options
 
 The main function `iwrt_auto` relies on default options that have been set when the package is loaded. You may overwrite the default values of these options using the function `options()` and return an option value using `getOption()`
@@ -69,7 +71,10 @@ The main function `iwrt_auto` relies on default options that have been set when 
 For example, to see and then overwrite how much to expand the ROI region, you can do the following:
 
 ```r
+# save default value
 old_value <- getOption("roi.adj")
+
+# overwrite option with new value 1.1
 options(roi.adj=1.1)
 ```
 
@@ -80,23 +85,23 @@ You can also provide a list of options to overwrite:
 old_values <- options(list(tobii.filter.width=.67, tobii.filter.window=7))
 ```
 
-Here is the complete list of options:
+Here is the complete list of options set by this package:
 
-- `tobii.interpolation.window`: If any gaps in tracking data, this determines how wide the gap is allowed to be when attempting to fill the gap. This works for short durations where the person may blink or no data collected.
+- `tobii.interpolation.window`: If any gaps in tracking data, this determines how wide the gap is allowed to be when attempting to fill the gap with estimated values. This works for short durations where the person may blink or no data collected.
 
-- `tobii.interpolation.method`: Whether to fill gaps linearlly or to use smoothing splines using (`spline(..., method="natural")`)
+- `tobii.interpolation.method`: Whether to fill gaps linearly or to use smoothing splines using (`spline(..., method="natural")`)
 
-- `tobii.filter.width`: Width of the Gaussian distribution of the smoothing filter. Default to 99% of the distribution, lower values means a flatter distribution, approaching the mean of a series of values.
+- `tobii.filter.width`: Width of the Gaussian distribution of the smoothing filter. Defaults to 99% of the distribution, lower values means a flatter distribution, approaching the mean of a series of values. Don't set to 0 or 1.
 
-- `tobii.filter.window`: Window size of smoothing filter. Larger values returns smoother data but at a cost of introducing little variability. Defaults to a gaussian smoothing filter within a timespan of 92ms at 120hz.
+- `tobii.filter.window`: Window size of smoothing filter. Larger values returns smoother data but at a cost of introducing little variability and inaccurate results. Defaults to a Gaussian smoothing filter within a time span of 91.67ms at 120Hz.
 
-- `tobii.coord.xrange`: Range corresponding to a particular tobii horizontal coordinate system. Defaults to the Active Display Coordinate System which is in the range of 0 to 1.
+- `tobii.coord.xrange`: Horizontal axis range corresponding to a particular tobii coordinate system. Defaults to the Active Display Coordinate System for gaze direction which is in the range of 0 to 1.
 
-- `tobii.coord.yrange`: Range corresponding to a particular tobii vertical coordinate system. Defaults to the Active Display Coordinate System which is in the range of 0 to 1.
+- `tobii.coord.yrange`: Vertical axis range corresponding to a particular tobii coordinate system. Defaults to the Active Display Coordinate System for gaze direction which is in the range of 0 to 1.
 
-- `tobii.col.left.validity`: Name of validity column for the left eye
+- `tobii.col.left.validity`: Name of the validity column for the left eye
 
-- `tobii.col.right.validity`: Name of validity column for the right eye
+- `tobii.col.right.validity`: Name of the validity column for the right eye
 
 - `tobii.col.left.xaxis`: Name of tracking data column for left eye horizontal axis
 
@@ -106,14 +111,16 @@ Here is the complete list of options:
 
 - `tobii.col.right.yaxis`: Name of tracking data column for right eye vertical axis
 
-- `roi.list`: list of ROI column names. Each sublist must have 4 character strings referring to column names corresponding to the left ROI coordinate, top ROI coordinate, right ROI coordinate, bottom ROI coordinate. All coordinates must be in this order (left, top, right, bottom), and the data for these columns must be in the same range as the `tobii.coord.xrange` and `tobii.coord.yrange` options. Currently this is a list with 2 sublists, each sublist is the names of columns corresponding to the coordinates of the left image and right image taken from the task data. 
+- `roi.list`: list of ROI column names. Each sub-list must have a vector of 4 character strings referring to column names, which each correspond to the left ROI coordinate, top ROI coordinate, right ROI coordinate, bottom ROI coordinate (e.g., `c("l","t","r","b")`). All coordinates must be in this order (left, top, right, bottom), and the data for these columns must be in the same value range as the `tobii.coord.xrange` and `tobii.coord.yrange` options. Currently this is a list with 2 sub-lists, each sub-list is the names of columns corresponding to the coordinates of the left image and right image taken from the task data. 
 
-- `roi.adj`: How much to increase or decrease the coordinates specified in the `roi.list` above. This is a multiplicative property. So if you set it to `1.1`, it will expand the box by 110%. 
+- `roi.adj`: How much to increase or decrease the coordinates specified in the `roi.list` above. This is a multiplicative property. So if you set it to `1.1`, it will expand the box by 110%. If set to `0.9`, will shrink the ROI down to 90% of original size.
        
         
 # Advanced usage
 
-If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console. More functions to come.
+If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console. 
+
+**More functions are to come**
 
 ```r
 task_info <- import_task_data("path")
@@ -124,11 +131,11 @@ tracking_data <- import_tracking_data("path")
 
 ## `complete` data column descriptions
 
-This is both the task data (e.g., `Infant_WRT_001_Name_data.csv`) and tracking data (e.g., `Infant_WRT_001_Name_eyeData_001.csv`) merged together for all trials and all participants with some additional columns after further processing using the `iwrt_auto` function.
+These data are both the task data (e.g., `Infant_WRT_001_Name_data.csv`) and tracking data (e.g., `Infant_WRT_001_Name_eyeData_001.csv`) merged together for all trials and all participants with some additional columns after further processing using the `iwrt_auto` function.
 
-- `id`: id number entered in task subject info field.
+- `id`: id number entered in task subject info field
 
-- `name`: name as entered in subject info.
+- `name`: name as entered in subject info
 
 - `trial`: trial number of the task
 
@@ -144,9 +151,9 @@ This is both the task data (e.g., `Infant_WRT_001_Name_data.csv`) and tracking d
 
 - `imgEnd`: offset of trial, due to end of trial time or looking away (microseconds)
 
-- `tobiiOnset`: timestamp for when the tobii clock started
+- `tobiiOnset`: time stamp for when the tobii clock started
 
-- `ptbOnset`: timestamp for when the Psychtoolbox clock started
+- `ptbOnset`: time stamp for when the Psychtoolbox clock started
 
 - `new`: new or familiar images were used
 
@@ -174,11 +181,11 @@ This is both the task data (e.g., `Infant_WRT_001_Name_data.csv`) and tracking d
 
 - `file_track`: file name for the eye tracking related data
 
-- `tet_musec`: Tobii timestamp for tracking data points in microseconds
+- `tet_musec`: Tobii time stamp for tracking data points in microseconds
 
-- `tet_musec_onset`: timestamp for when Tobii data buffer was written
+- `tet_musec_onset`: time stamp for when Tobii data buffer was written
 
-- `ptb_musec_onset`: Psychtoolbox timestamp that matches up to Tobii data collection timestamp
+- `ptb_musec_onset`: Psychtoolbox time stamp that matches up to Tobii data collection time stamp
 
 - `left_eye_ucs_x`: left eye position in user coordinate system for x axis point (mm)
 
@@ -249,21 +256,21 @@ This is both the task data (e.g., `Infant_WRT_001_Name_data.csv`) and tracking d
 
 ## `roi` data columns descriptions
 
-The new columns that have been added for the `roi` data correspond to how long the tracking coordinates are within some specified region of interest. The descriptions for each new column are the following:
+The additional columns that have been added for the `roi` data correspond to how long the tracking coordinates are within some specified region of interest. These data do not contain individual tracking samples, and is a summary of the tracking data based on time spent looking at the ROI's. The descriptions for each new column are the following:
 
 - `phase_duration`: The length of a particular phase of the trial in milliseconds, which can be either pre audio phase or post audio phase.
 
-- `time_segment`: Counter that increases when going from one ROI to the next. This is reset for each trial and for each phase of the trial. 
+- `time_segment`: Counter that increases when going from one ROI to the next (which also includes undetermined ROI's). This counter is reset for each trial and for each phase of the trial. Useful for finding the number of ROI switches per trial
 
 - `roi_dwell_time`: Amount of time in milliseconds for when the gaze was fixated within some specified region according to the `roi` column.
 
-- `roi_onset`: Timestamp in milliseconds for when the first tracking point was obtained.
+- `roi_onset`: Time stamp in milliseconds for when the first tracking point was obtained.
 
-- `roi_offset`: Timestamp in milliseconds for when the last tracking point was obtained.
+- `roi_offset`: Time stamp in milliseconds for when the last tracking point was obtained.
 
 - `tracking_time`: Total amount of time in which tracking data was found regardless of whether or not it was within the ROI. May be less than the `phase_duration` if no data was able to be obtained for some amount of time, for example, if the participant was looking away.
 
 - `trial_phase`: Variable indicating if the phase is before the onset of the audio/label or if the data corresponds to after the audio was administered.
 
-- `roi`: Variable indicating which ROI the dwell time correponds to. Defaults to left and right image ROIs. If the ROI cannot be determined due to tracking `NA`'s then this field is `NA`. 
+- `roi`: Variable indicating which ROI the dwell time corresponds to. Defaults to left and right image ROIs. If the ROI cannot be determined due to tracking `NA`'s then this field is also `NA`. 
 
