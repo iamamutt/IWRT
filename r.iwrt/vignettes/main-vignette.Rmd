@@ -9,6 +9,10 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, echo=FALSE}
+knitr::opts_chunk$set(eval=FALSE)
+```
+
 # Package Info
 
 The `r.iwrt` package is used to handle the data exported from the MATLAB task IWRT, which is the main program in this GitHub repository. The IWRT task will export data in a root/main folder, typically called `data` and will look something like this:
@@ -36,7 +40,7 @@ After installing the package (see GitHub `README.md` documentation) once, you mu
 The `iwrt_auto` function takes just one argument, the path to the main data folder. It will return an R list object containing several datasets. Take what you need, as you may not need datasets such as the complete set of data, but perhaps you may want to analyze ROI (Region of Interest) data. By default, regions of interest are the boundaries of the left and right images from the IWRT task data. After running `iwrt_auto` you can extract the `data.table` from the list called `roi` to get the ROI data. See code below as an example:
 
 
-```{r, eval=FALSE}
+```r
 # load the library
 library(r.iwrt)
 
@@ -64,14 +68,14 @@ The main function `iwrt_auto` relies on default options that have been set when 
 
 For example, to see and then overwrite how much to expand the ROI region, you can do the following:
 
-```{r, eval=FALSE}
+```r
 old_value <- getOption("roi.adj")
 options(roi.adj=1.1)
 ```
 
 You can also provide a list of options to overwrite:
 
-```{r, eval=FALSE}
+```r
 # quickly set new options and get old values at the same time
 old_values <- options(list(tobii.filter.width=.67, tobii.filter.window=7))
 ```
@@ -111,7 +115,7 @@ Here is the complete list of options:
 
 If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console. More functions to come.
 
-```{r, eval=FALSE}
+```r
 task_info <- import_task_data("path")
 tracking_data <- import_tracking_data("path")
 ```

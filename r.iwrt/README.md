@@ -45,7 +45,7 @@ library(r.iwrt)
 
 You can then run the automatic processing function by pointing it to the location of your data, then extracting the relevant data components you need for further analysis.
 
-```
+```r
 # use the auto function to return important datasets
 iwrt_list <- iwrt_auto("path/to/data")
 
