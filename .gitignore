@@ -2,3 +2,4 @@ data/**
 tobii_id.txt
 .DS_Store
 *.asv
+.Rproj.user
