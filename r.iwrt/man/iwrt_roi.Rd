@@ -4,10 +4,10 @@
 \alias{iwrt_roi}
 \title{ROI classification}
 \usage{
-iwrt_roi(dat, xname, yname)
+iwrt_roi(in_dat, xname, yname)
 }
 \arguments{
-\item{dat}{data.table with the ROI column and their normalized coordinates}
+\item{in_dat}{data.table with the ROI column and their normalized coordinates}
 
 \item{xname}{normalized coordinate for the x axis of the eye gaze position}
 

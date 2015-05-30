@@ -177,14 +177,15 @@ iwrt_import_raw <- function(root_path)
 
 iwrt_time_clean <- function(dat)
 {
+    DT <- copy(dat)
     message("\nRemoving timestamps outside of trial duration...")
-    dat[, t_elapsed := (tet_musec-min(tet_musec_onset)) / 1000, 
+    DT[, t_elapsed := (tet_musec-min(tet_musec_onset)) / 1000, 
         by=list(id, name, date, trial)]
-    dat <- dat[t_elapsed >= 0, ]
-    rm_out_ts <- dat[, tet_musec <= max(tet_musec_onset), 
+    DT <- DT[t_elapsed >= 0, ]
+    rm_out_ts <- DT[, tet_musec <= max(tet_musec_onset), 
                      by=list(id, name, date, trial)][, V1]
-    dat <- dat[rm_out_ts==TRUE, ]
-    return(dat)
+    DT <- DT[rm_out_ts==TRUE, ]
+    return(DT)
 }
 
 #' ROI classification
@@ -194,23 +195,24 @@ iwrt_time_clean <- function(dat)
 #' Must use \code{options()} to set the column names of your ROIs. Defaults to
 #'   left and right image locations. xname and yname are eyegaze positions.
 #' 
-#' @param dat data.table with the ROI column and their normalized coordinates
+#' @param in_dat data.table with the ROI column and their normalized coordinates
 #' @param xname normalized coordinate for the x axis of the eye gaze position
 #' @param yname normalized coordinate for the y axis of the eye gaze position
 #'
 #' @return Same data.table but we new columns added for each ROI
-iwrt_roi <- function(dat, xname, yname)
+iwrt_roi <- function(in_dat, xname, yname)
 {# xname="por_x"; yname="por_y"
     # TODO:
-    # check if cols exist
-    # check if data.table
+    # check if x,y and ROI cols exist
+    # check if input is data.table
     
+    DT <- copy(in_dat)
     message("\nProcessing ROI's...") 
     adj <- getOption("roi.adj")
     roi <- getOption("roi.list")
     
     roi_cat <- lapply(roi, function(x) {
-        dsub <- dat[, c(xname, yname, x), with=FALSE]
+        dsub <- DT[, c(xname, yname, x), with=FALSE]
         setnames(dsub, names(dsub), c("x", "y", "l", "t", "r", "b"))
         dsub[, `:=` (l = l * 1/adj,
                      t = t * 1/adj,
@@ -224,7 +226,7 @@ iwrt_roi <- function(dat, xname, yname)
     
     out_roi_cat <- as.data.table(do.call(cbind, roi_cat))
     
-    return(cbind(dat, out_roi_cat))
+    return(cbind(DT, out_roi_cat))
 }
 
 iwrt_roi_duration <- function(in_dat)
