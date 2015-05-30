@@ -3,5 +3,5 @@ inst/doc
 .Rbuildignore
 .Rhistory
 .RData
-.Rproj
+r.iwrt.Rproj
 r.iwrt.Rcheck
