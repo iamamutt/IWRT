@@ -111,10 +111,11 @@ Here is the complete list of options set by this package:
 
 - `tobii.col.right.yaxis`: Name of tracking data column for right eye vertical axis
 
-- `roi.list`: list of ROI column names. Each sub-list must have a vector of 4 character strings referring to column names, which each correspond to the left ROI coordinate, top ROI coordinate, right ROI coordinate, bottom ROI coordinate (e.g., `c("l","t","r","b")`). All coordinates must be in this order (left, top, right, bottom), and the data for these columns must be in the same value range as the `tobii.coord.xrange` and `tobii.coord.yrange` options. Currently this is a list with 2 sub-lists, each sub-list is the names of columns corresponding to the coordinates of the left image and right image taken from the task data. 
+- `roi.list`: list of ROI column names. Each sub-list must have a vector of 4 character strings referring to column names, which each correspond to the left ROI coordinate, top ROI coordinate, right ROI coordinate, bottom ROI coordinate (e.g., `c("l","t","r","b")`). All coordinates must be in this order (left, top, right, bottom), and the data for these columns must be in the same value range as the `tobii.coord.xrange` and `tobii.coord.yrange` options. Currently this is a list with 2 sub-lists, each sub-list is the names of columns corresponding to the coordinates of the left image and right image taken from the task data.
 
-- `roi.adj`: How much to increase or decrease the coordinates specified in the `roi.list` above. This is a multiplicative property. So if you set it to `1.1`, it will expand the box by 110%. If set to `0.9`, will shrink the ROI down to 90% of original size.
+- `roi.adj`: How much to increase or decrease the coordinates specified in the `roi.list` above. This is a multiplicative property. So if you set it to `1.1`, it will expand the box by 110%. If set to `0.9`, will shrink the ROI down to 90% of original size. Be careful with this option, because if you increase ROIs enough to where they overlap, looking durations and accuracy scores will be not be mutually exclusive and will be counted twice. 
        
+- `roi.map`: Names from `roi.list` that map to actual column names in the raw data
         
 # Advanced usage
 
@@ -273,4 +274,8 @@ The additional columns that have been added for the `roi` data correspond to how
 - `trial_phase`: Variable indicating if the phase is before the onset of the audio/label or if the data corresponds to after the audio was administered.
 
 - `roi`: Variable indicating which ROI the dwell time corresponds to. Defaults to left and right image ROIs. If the ROI cannot be determined due to tracking `NA`'s then this field is also `NA`. 
+
+- `roi_img`: The mapping of the image corresponding to a particular ROI
+
+- `acc`: Looking accuracy, if the ROI viewed matches the word that was said for that trial. Only post audio phases can be accurate, and tones don't count toward accuracy. 
 

@@ -17,9 +17,10 @@
         tobii.col.left.yaxis = "left_gaze_acs_y",
         tobii.col.right.yaxis = "right_gaze_acs_y",
         # must be in this exact order left, top, right, bottom
-        roi.list = list(roi_left=c("imgLx0", "imgLy0", "imgLx1", "imgLy1"),
-                         roi_right= c("imgRx0", "imgRy0", "imgRx1", "imgRy1")),
-        roi.adj = 1 # roi multiplier
+        roi.list = list(left_roi_obs=c("imgLx0", "imgLy0", "imgLx1", "imgLy1"),
+                         right_roi_obs=c("imgRx0", "imgRy0", "imgRx1", "imgRy1")),
+        roi.adj = 1, # roi multiplier
+        roi.map = list(left_roi_obs="left", right_roi_obs="right")
         )
     toset <- !(names(op.r.iwrt) %in% names(op))
     if(any(toset)) options(op.r.iwrt[toset])

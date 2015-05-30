@@ -235,11 +235,16 @@ iwrt_roi_duration <- function(in_dat)
     DT <- copy(in_dat)
     message("\nComputing ROI summary...") 
     roi <- getOption("roi.list")
+    roi_maps <- getOption("roi.map")
+    
+    if (any(!names(roi_maps) %in% names(DT))) {
+        stop(simpleError("option roi.map does not contain valid names"))
+    }
     
     # tet_musec and ptb_musec_onset must exist
     looking_duration <- function(f,t1,t2,ts,pts) {
         # x=DT[id==3 & trial == 28, ]
-        # t1=x$imgStart; t2=x$audioStart; ts=x$tet_musec; pts=x$ptb_musec_onset; f=x$roi_left
+        # t1=x$imgStart; t2=x$audioStart; ts=x$tet_musec; pts=x$ptb_musec_onset; f=x$left
         idx <- pts > min(t1) & pts <= max(t2)
         # timestamps=ts[idx]; fixations=f[idx]
         fix_dat <- region_dwell_time(ts[idx], f[idx])
@@ -289,6 +294,19 @@ iwrt_roi_duration <- function(in_dat)
             time_segment := as.numeric(seq_len(length(time_segment))), 
             by=list(name, id, date, trial, trial_phase)]
     
+    out_dat[, roi_img := roi]
+    
+    lapply(seq_len(length(roi_maps)), function(x) {
+        mapped_log <- out_dat[, roi_img == names(roi_maps)[x]]
+        mapped_log[is.na(mapped_log)] <- FALSE
+        mapped_vec <- out_dat[[roi_maps[[x]]]][mapped_log]
+        out_dat[mapped_log==TRUE, roi_img := mapped_vec]
+    })
+    
+    out_dat[, acc := ifelse(roi_img==word, 1, 0)]
+    out_dat[word == "tone", acc := NA]
+    out_dat[trial_phase == "pre_audio", acc := NA]
+    return(out_dat)
 }
 
 #' Automatic IWRT data import and processing
