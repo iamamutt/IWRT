@@ -178,7 +178,7 @@ tracking_interpolation <- function(x, k, splines=FALSE, plotfill=FALSE)
 #' @examples
 #' tracking_process(my_raw_data, "x")
 tracking_process <- function(in_dat, which_axis)
-{# in_dat=dat[id==3 & trial == 5,]; which_axis = "y"
+{# in_dat=dat[id==3,]; which_axis = "y"
     
     # print(in_dat[,imgStart[1]])
     if (missing(which_axis)) stop(simpleError("Need tracking axis character"))

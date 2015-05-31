@@ -144,11 +144,63 @@ import_tracking_data <- function(root_path, file_paths, datatable = TRUE) {
     }
 }
 
-iwrt_merge <- function(task, tracking) {
-    dat <- merge(task, tracking, by = c("name", "id", "trial"))
-    dat <- dat[order(id, name, date, tet_musec)]
+#' Merge task and tracking data
+#' 
+#' Merges two different data sets of eye gaze data and task related data
+#'
+#' @param task task data. If not a data.table will be converted to one
+#' @param tracking tracking data. If not a data.table will be converted to one
+#'
+#' @return data.table of merged tracking and task data
+#' @export
+#'
+#' @examples
+#' task <- import_task_data(root_path)
+#' tracking <- import_tracking_data(root_path)
+#' merged_data <- iwrt(task, tracking)
+iwrt_merge <- function(task, tracking)
+{ 
+    if (!any(class(task) %in% "data.table")) task <- as.data.table(task)
+    if (!any(class(tracking) %in% "data.table")) tracking <- as.data.table(tracking)
+    
+    DT <- copy(tracking)
+    DT[, trial := NA]
+    
+    # overwrite tracking trial number based on timestamps
+    fix_tet_musec <- function(t1, t2, in_name, in_id, in_t) {
+        tet_rng <- DT[(name == in_name & id == in_id) &
+                      (ptb_musec_onset >= t1 & ptb_musec_onset <= t2), 
+                      range(tet_musec_onset)]
+        DT[(name == in_name & id == in_id) & 
+               (tet_musec > tet_rng[1] & tet_musec <= tet_rng[2]), 
+           trial := in_t]
+        return(invisible())
+    }
+    
+    task[, fix_tet_musec(min(imgStart), max(imgEnd), name, id, trial), by=list(date, name, id, trial)]
+    
+    DT[is.na(trial), trial := -1]
+    dat <- merge(task, DT, by = c("name", "id", "trial"), all=TRUE)
+    dat <- dat[order(id, name, date, tet_musec, trial)]
 
     return(dat)
+}
+
+iwrt_clean_timestamps <- function(in_dat)
+{
+    DT <- copy(in_dat)
+    # cleanup timestamps
+    message("\nRemoving timestamps outside of trial duration...")
+    DT <- DT[!(is.na(trial) | trial == -1), ]
+    DT[order(tet_musec), t_elapsed := (tet_musec-min(tet_musec)) / 1000, 
+       by=list(id, name, trial)]
+    DT <- DT[t_elapsed >= 0, ]
+    rm_out_ts <- DT[, tet_musec <= max(tet_musec), 
+                    by=list(id, name, trial)][, V1]
+    DT <- DT[rm_out_ts==TRUE, ]
+    
+    ## also need to clean up NAs due to some track data but no task
+    return(DT)
 }
 
 #' Import raw data
@@ -171,21 +223,9 @@ iwrt_import_raw <- function(root_path)
     task <- import_task_data(root_path)
     message("\nImporting IWRT tracking data...")
     tracking <- import_tracking_data(root_path)
+    message("\nMerging task and tracking data...")
     dat <- iwrt_merge(task, tracking)
     return(dat)
-}
-
-iwrt_time_clean <- function(dat)
-{
-    DT <- copy(dat)
-    message("\nRemoving timestamps outside of trial duration...")
-    DT[, t_elapsed := (tet_musec-min(tet_musec_onset)) / 1000, 
-        by=list(id, name, date, trial)]
-    DT <- DT[t_elapsed >= 0, ]
-    rm_out_ts <- DT[, tet_musec <= max(tet_musec_onset), 
-                     by=list(id, name, date, trial)][, V1]
-    DT <- DT[rm_out_ts==TRUE, ]
-    return(DT)
 }
 
 #' ROI classification
@@ -241,35 +281,47 @@ iwrt_roi_duration <- function(in_dat)
         stop(simpleError("option roi.map does not contain valid names"))
     }
     
+    DT[, `:=` (pre_audio_duration=(audioStart-imgStart)/1000, 
+               post_audio_duration=(imgEnd-audioStart)/1000)]
+    
     # tet_musec and ptb_musec_onset must exist
-    looking_duration <- function(f,t1,t2,ts,pts) {
-        # x=DT[id==3 & trial == 28, ]
-        # t1=x$imgStart; t2=x$audioStart; ts=x$tet_musec; pts=x$ptb_musec_onset; f=x$left
-        idx <- pts > min(t1) & pts <= max(t2)
-        # timestamps=ts[idx]; fixations=f[idx]
-        fix_dat <- region_dwell_time(ts[idx], f[idx])
+    looking_duration <- function(t1, t2, ts, f, tts, pts) {
+        # t=DT[id==3 & trial == 20, ]
+        # t1=t$audioStart; t2=t$imgEnd; f=t[[x]]; ts=t$tet_musec; tts=t$tet_musec_onset; pts=t$ptb_musec_onset
+        t1 <- min(t1)
+        t2 <- max(t2)
+        t_rng <- tts[pts > t1 & pts <= t2]
+        t_idx <- ts > min(t_rng) & ts <= max(t_rng)
+        if (!any(t_idx)) {
+            timestamps <- NA
+            in_region <- NA
+        } else {
+            timestamps <- ts[t_idx]
+            in_region <- f[t_idx]
+        }
+        fix_dat <- region_dwell_time(timestamps, in_region)
     }
     
-    out_list <- lapply(names(roi), function(x) {
+    out_list <- lapply(names(roi), function(x) {# x=names(roi)[1]
         DT[, roi_x := DT[[x]]]
-        DT[, `:=` (pre_audio_duration=(audioStart-imgStart)/1000, 
-                       post_audio_duration=(imgEnd-audioStart)/1000)]
-        
+
         before_aud <- DT[order(tet_musec), 
-                             looking_duration(roi_x,
-                                              imgStart,
+                             looking_duration(imgStart,
                                               audioStart,
                                               tet_musec,
+                                              roi_x,
+                                              tet_musec_onset,
                                               ptb_musec_onset),
                              by=list(id, age, name, date, trial, 
                                      new, left, right, word,
                                      pre_audio_duration)]
         
         after_aud <- DT[order(tet_musec), 
-                            looking_duration(roi_x,
-                                             audioStart,
+                            looking_duration(audioStart,
                                              imgEnd,
                                              tet_musec,
+                                             roi_x,
+                                             tet_musec_onset,
                                              ptb_musec_onset),
                             by=list(id, age, name, date, trial,
                                     new, left, right, word,
@@ -306,6 +358,7 @@ iwrt_roi_duration <- function(in_dat)
     out_dat[, acc := ifelse(roi_img==word, 1, 0)]
     out_dat[word == "tone", acc := NA]
     out_dat[trial_phase == "pre_audio", acc := NA]
+    
     return(out_dat)
 }
 
@@ -329,11 +382,11 @@ iwrt_roi_duration <- function(in_dat)
 iwrt_auto <- function(root_path)
 {# root_path <- .matlab_data()
     dat <- iwrt_import_raw(root_path)
+    dat <- iwrt_clean_timestamps(dat)
     message(paste("\nProcessing x tracking data..."))
     dat[, por_x := tracking_process(.SD, "x"), by=list(name, id, date, trial)]
     message(paste("\nProcessing y tracking data..."))
     dat[, por_y := tracking_process(.SD, "y"), by=list(name, id, date, trial)]
-    dat <- iwrt_time_clean(dat)
     dat <- iwrt_roi(dat, "por_x", "por_y")
     dat_roi <- iwrt_roi_duration(dat)
     message("\nCompleted auto import!")
