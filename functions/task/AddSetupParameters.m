@@ -1,5 +1,6 @@
 function setup = AddSetupParameters(useSetupFile, debug, rootpath)
 
+rng('shuffle');
 
 if ~useSetupFile
     
