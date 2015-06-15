@@ -2,8 +2,7 @@ function RunProgram(setup, procedure, images, audio)
 %Iterates through trials and collects data
 
 %% TODO
-% Fix look away flag to check only data for current timestamps, since tobii gives past ts
-% add data to check type of trial end
+
 %%
 trialLength = size(procedure.known, 1);
 
@@ -11,7 +10,8 @@ trialLength = size(procedure.known, 1);
 dataWrite = fopen(setup.dataFileStr, 'w');
 writeLine(dataWrite, {'date', 'id', 'name', 'age', ...
     'imgStart', 'audioStart', 'imgEnd', 'tobiiOnset', 'ptbOnset', 'trial', 'new', 'left', 'right', 'word', ...
-    'imgLx0', 'imgLy0', 'imgLx1', 'imgLy1','imgRx0', 'imgRy0', 'imgRx1', 'imgRy1'});
+    'imgLx0', 'imgLy0', 'imgLx1', 'imgLy1','imgRx0', 'imgRy0', 'imgRx1', 'imgRy1', ...
+    'attentionGetterTime', 'expmntrEndPre', 'expmntrEndPost', 'subjectEndPost'});
 
 % Perform basic initialization of the sound driver:
 audioPtr = initPTBSound(44100);
@@ -52,7 +52,13 @@ for trial = 1:trialLength
     % reset tracking variables
     lookAwayFlagSet = false;
     breakTrialFlag = false;
+    breakTrialDuration = 0;
     attentionImage = randi([1, 2], 1, 1);
+    
+    interruption_attention = 0;
+    interruption_prerelease = false;
+    interruption_postrelease = false;
+    interruption_endbylook = false;
     
     if setup.eyeTracker
         leftEyeData = [];
@@ -88,6 +94,7 @@ for trial = 1:trialLength
     % start tracker
     if setup.eyeTracker
         tetio_startTracking;
+        TetDat(sessionStart, tobiiStart);
     end
     
     % draw blank mask for 350 milliseconds
@@ -95,18 +102,20 @@ for trial = 1:trialLength
     Screen('Flip', windowPtr);
     WaitSecs(0.35);
     
-    % start pre audio screen
+    %% start pre audio screen
     onsetTimestamp = timeStamp(sessionStart);
     startTimestamp = GetSecs;
     disp('Press space to proceed manually.');
+    
     while true
         
         % loop time for one iter
         loopDuration = GetSecs - startTimestamp;
+        
         if loopDuration > setup.timeLimitPre
             break
         end
-        
+
         if setup.eyeTracker
             
             % get tracking data
@@ -126,6 +135,8 @@ for trial = 1:trialLength
             % also restart the preaudio clock
             if lookAwayFlagSet || checkTermination(KbName('UpArrow'))
                 
+                attentionShowTime = GetSecs;
+                
                 % check if sound is already playing. if not, play
                 soundStatus = PsychPortAudio('GetStatus', audioPtr);
                 if soundStatus.Active == 0
@@ -136,6 +147,8 @@ for trial = 1:trialLength
                 % draw and show attention getter image
                 Screen('DrawTexture', windowPtr, aTextures(attentionImage));
                 Screen('Flip', windowPtr);
+                
+                interruption_attention = interruption_attention + ((GetSecs-attentionShowTime) .* 1000); 
                 
                 % reset clock
                 startTimestamp = GetSecs;
@@ -159,6 +172,7 @@ for trial = 1:trialLength
         % option to proceed manually
         if checkTermination(KbName('SPACE'))
             KbReleaseWait;
+            interruption_prerelease = true;
             break
         end
         
@@ -166,14 +180,7 @@ for trial = 1:trialLength
     
     clc;
     
-    % reset look away components
-    if setup.eyeTracker
-        lookAwayBuffer = [];
-        lookAwayFlagSet = false;
-        % put tracker collection func here to reset past buffer
-    end
-    
-    % start audio and audio onset timestamp
+    %% start audio and audio onset timestamp
     PsychPortAudio('Stop', audioPtr);
     PsychPortAudio('FillBuffer', audioPtr, trialAud.wav');
     audioTimestamp = timeStamp(sessionStart);
@@ -181,12 +188,17 @@ for trial = 1:trialLength
     
     % start post audio screen
     startTimestamp = GetSecs;
+    
+    % reset look away components
+    if setup.eyeTracker
+        lookAwayBuffer = [];
+        lookAwayFlagSet = false;
+    end
+    
     while true
+        
         % loop time for one iter
         loopDuration = GetSecs - startTimestamp;
-        if loopDuration > setup.timeLimitPost
-            break
-        end
         
         if setup.eyeTracker
             % tracking data
@@ -203,7 +215,7 @@ for trial = 1:trialLength
             [lookAwayFlagSet, lookAwayBuffer] = LookAwayFlag(lookAwayFlagSet, lookAwayBuffer, gzx, gzy, setup.lookAwayBufferSize);
             
             % check if need to end trial early for not looking
-            if lookAwayFlagSet % AND if (GetSecs - startTimeStamp) > Some min. time in post audio
+            if lookAwayFlagSet && (GetSecs - startTimestamp) > 0.1
                 % start looking away clock
                 lookAwayTimestamp = GetSecs;
                 disp('Countdown started to end trial early');
@@ -214,18 +226,31 @@ for trial = 1:trialLength
                     [~, ~, ~, ~, ~, gzx, gzy] = TetDat(sessionStart, tobiiStart);
                     [lookAwayFlagSet, lookAwayBuffer] = LookAwayFlag(lookAwayFlagSet, lookAwayBuffer, gzx, gzy, setup.lookAwayBufferSize);
                     
+                    % trial time ran out before looking away assessment
+                    if loopDuration > setup.timeLimitPost
+                        breakTrialFlag = false;
+                        breakTrialDuration = GetSecs-lookAwayTimestamp;
+                        clc;
+                        disp('Trial over already');
+                        break
+                    end
+                    
                     % looked back on screen, add more time and continue
                     if ~lookAwayFlagSet
                         startTimestamp = startTimestamp + (lookAwayTimestamp-startTimestamp) + 0.1;
+                        breakTrialFlag = false;
+                        breakTrialDuration = 0;
                         clc;
                         disp('Looked back at screen');
                         break
                     end
                     
                     % didn't look back in time, set end trial flag
-                    if breakTrialDuration > setup.lookAwayTime || loopDuration > setup.timeLimitPost
-                        disp('Ending trial early');
+                    if breakTrialDuration > setup.lookAwayTime
                         breakTrialFlag = true;
+                        breakTrialDuration = GetSecs-lookAwayTimestamp;
+                        clc;
+                        disp('Ending trial early due to looking away');
                         break
                     end
                 end
@@ -234,6 +259,12 @@ for trial = 1:trialLength
         
         % end trial early if set
         if breakTrialFlag
+            interruption_endbylook = true;
+            break
+        end
+        
+        % check if trial is over
+        if loopDuration > setup.timeLimitPost
             break
         end
         
@@ -248,19 +279,16 @@ for trial = 1:trialLength
         % option to contiue early manually
         if checkTermination(KbName('SPACE'))
             KbReleaseWait;
+            interruption_postrelease = true;
             break
         end
         
     end
     
-    % update end trial time
-    if breakTrialFlag
-        offsetTimestamp = timeStamp(sessionStart) - setup.lookAwayTime .* 1000000;
-    else
-        offsetTimestamp = timeStamp(sessionStart);
-    end
+    % update end trial time with subtraction if necessary
+    offsetTimestamp = timeStamp(sessionStart) - breakTrialDuration .* 1000000;
     
-    % stop eye tracker
+    % stop eye tracker data collection
     if setup.eyeTracker
         tetio_stopTracking;
     end
@@ -282,7 +310,8 @@ for trial = 1:trialLength
         onsetTimestamp, audioTimestamp, offsetTimestamp, double(tobiiLocalOnset), sessionStart, ...
         trial, ~trialImg.known, trialImg.nameL, trialImg.nameR, trialAud.name, ...
         trialImg.normL(1), trialImg.normL(2), trialImg.normL(3), trialImg.normL(4),...
-        trialImg.normR(1), trialImg.normR(2), trialImg.normR(3), trialImg.normR(4)});
+        trialImg.normR(1), trialImg.normR(2), trialImg.normR(3), trialImg.normR(4), ...
+        interruption_attention, interruption_prerelease, interruption_postrelease, interruption_endbylook});
     
     % write tracking data
     if setup.eyeTracker
@@ -292,6 +321,8 @@ for trial = 1:trialLength
     
     % check for escape key
     if checkTermination(setup.escKeys)
+        clc;
+        disp('Experiment ended early!');
         break
     end
     
