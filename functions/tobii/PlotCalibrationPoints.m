@@ -72,5 +72,5 @@ drawnow
 
 clc
 
-%disp('Close plot window or press any key on plot window to continue');
+%disp('Press ENTER key to continue');
 end
