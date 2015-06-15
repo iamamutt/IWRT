@@ -45,10 +45,6 @@ if ~useSetupFile
     %  values: double
     setup.timeLimitPost = 3.0;
     
-    % time (seconds) to display one flash of the attention getter screen
-    %  values: double
-    setup.attentionGetterTime = 0.75;
-    
     % time (seconds) before quitting trial if child is looking away
     %  values: double
     setup.lookAwayTime = 1;
