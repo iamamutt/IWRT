@@ -2,7 +2,8 @@ function RunProgram(setup, procedure, images, audio)
 %Iterates through trials and collects data
 
 %% TODO
-
+% Fix look away flag to check only data for current timestamps, since tobii gives past ts
+% add data to check type of trial end
 %%
 trialLength = size(procedure.known, 1);
 
@@ -169,6 +170,7 @@ for trial = 1:trialLength
     if setup.eyeTracker
         lookAwayBuffer = [];
         lookAwayFlagSet = false;
+        % put tracker collection func here to reset past buffer
     end
     
     % start audio and audio onset timestamp
@@ -201,7 +203,7 @@ for trial = 1:trialLength
             [lookAwayFlagSet, lookAwayBuffer] = LookAwayFlag(lookAwayFlagSet, lookAwayBuffer, gzx, gzy, setup.lookAwayBufferSize);
             
             % check if need to end trial early for not looking
-            if lookAwayFlagSet
+            if lookAwayFlagSet % AND if (GetSecs - startTimeStamp) > Some min. time in post audio
                 % start looking away clock
                 lookAwayTimestamp = GetSecs;
                 disp('Countdown started to end trial early');

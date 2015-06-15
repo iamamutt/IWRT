@@ -51,7 +51,7 @@ setup.attentionGetterTime = 0.75;
 %  values: double
 setup.lookAwayTime = 1;
 
-% how many flips of the screen to wait before assessing looking away
+% how many continuous flips of screen looking away to determine a true look away
 %  values: integer
 setup.lookAwayBufferSize = 30;
 
