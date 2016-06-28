@@ -59,7 +59,7 @@ import_task_data <- function(root_path, file_paths, datatable = TRUE) {
         y <- cbind(data.table::data.table(file_task = tools::file_path_sans_ext(basename(x))), y)
     })
     
-    dat <- do.call(rbind, dat)
+    dat <- data.table::rbindlist(dat, use.names = TRUE, fill = TRUE)
     dat_classes <- sapply(dat, class)
     dat_ints <- names(dat_classes)[dat_classes %in% c("integer", "integer64")]
     dat[, `:=`(eval(dat_ints), lapply(.SD, as.numeric)), .SDcols = dat_ints]

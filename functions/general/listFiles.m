@@ -33,7 +33,7 @@ for p = 1:length(paths)
    fileStruct = fileStruct(~cellfun(@(x) x, {fileStruct(:).isdir}));
    if ~isempty(fileStruct)
        for q = 1:length(fileStruct)
-           files = [files; fullfile(paths(p), fileStruct(q).name)];
+           files = [files; fullfile(paths{p}, fileStruct(q).name)];
        end
    end
 end
