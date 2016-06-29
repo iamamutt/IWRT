@@ -20,7 +20,8 @@
         roi.list = list(left_roi_obs=c("imgLx0", "imgLy0", "imgLx1", "imgLy1"),
                          right_roi_obs=c("imgRx0", "imgRy0", "imgRx1", "imgRy1")),
         roi.adj = 1, # roi multiplier
-        roi.map = list(left_roi_obs="left", right_roi_obs="right")
+        roi.map = list(left_roi_obs="left", right_roi_obs="right"),
+        roi.trim.ms = c(0, NA)
         )
     toset <- !(names(op.r.iwrt) %in% names(op))
     if(any(toset)) options(op.r.iwrt[toset])

@@ -276,6 +276,16 @@ iwrt_roi_duration <- function(in_dat)
     message("\nComputing ROI summary...") 
     roi <- getOption("roi.list")
     roi_maps <- getOption("roi.map")
+    roi_ts <- getOption("roi.trim.ms")
+    
+    if (!any(is.na(roi_ts)) && roi_ts[2] <= roi_ts[1]) {
+        stop(simpleError("Max timestamp trim can't be less than min"))
+    }
+    
+    roi_ts <- roi_ts * 1000
+
+    if (is.na(roi_ts[1])) 
+        roi_ts[1] <- 0
     
     if (any(!names(roi_maps) %in% names(DT))) {
         stop(simpleError("option roi.map does not contain valid names"))
@@ -286,12 +296,21 @@ iwrt_roi_duration <- function(in_dat)
     
     # tet_musec and ptb_musec_onset must exist
     looking_duration <- function(t1, t2, ts, f, tts, pts) {
-        # t=DT[id==3 & trial == 20, ]
+        # t=DT[id==15 & trial == 20, ]
         # t1=t$audioStart; t2=t$imgEnd; f=t[[x]]; ts=t$tet_musec; tts=t$tet_musec_onset; pts=t$ptb_musec_onset
-        t1 <- min(t1)
-        t2 <- max(t2)
+        
+        t1 <- min(t1) + roi_ts[1]
+        
+        if (is.na(roi_ts[2])) {
+            t2 <- max(t2)
+        } else {
+            t2 <- max(t2)
+            t2 <- min(c(t1 + roi_ts[2], t2), na.rm = TRUE)
+        }
+
         t_rng <- tts[pts > t1 & pts <= t2]
         t_idx <- ts > min(t_rng) & ts <= max(t_rng)
+        
         if (!any(t_idx)) {
             timestamps <- NA
             in_region <- NA

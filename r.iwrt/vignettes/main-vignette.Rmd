@@ -117,6 +117,8 @@ Here is the complete list of options set by this package:
        
 - `roi.map`: Names from `roi.list` that map to actual column names in the raw data
         
+- `roi.trim.ms`: Change the tracking time accumulation starting after value 1, and ends before value 2. The default is `c(0,NA)`, which means it compute durations at the beginning of the phase, up until the end of the phase. Something like `options(roi.trim.ms = c(367, 3500))` will start summing looking time after 367 milliseconds have passed, with a max looking time of 3.5 seconds.
+
 # Advanced usage
 
 If you wanted to process the data yourself you can use a series of functions to import the data on your own and do the processing on your own. To see a list of all available functions enter `?r.iwrt` into the R console. 
